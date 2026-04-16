@@ -26,13 +26,12 @@ interface Grocer {
 }
 
 function GrocerCard({ grocer }: { grocer: Grocer }) {
-  const { isFollowing, toggle } = useFollow("grocer", grocer._id);
+  const { isFollowing, toggle } = useFollow(grocer._id);
   const [isHovered, setIsHovered] = useState(false);
   const [isFollowingAnimating, setIsFollowingAnimating] = useState(false);
 
   const userId = grocer.userId;
   const avatar = userId?.avatar || '';
-  const fullName = userId?.fullName || '';
   const userName = userId?.userName || '';
   const shopName = grocer.shopName || '';
   const followerCount = grocer.followers?.length || 0;

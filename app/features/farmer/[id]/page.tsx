@@ -20,7 +20,6 @@ import { clearSavedProduce, markProduceVisited } from '@/store/contentSlice';
 import { useFollow } from '@/hooks/useFollow';
 import { useVisitedProduce } from '@/hooks/useVisitedProduce';
 
-// Dynamic import for Leaflet to avoid SSR issues
 const LocationMap = dynamic(() => import('@/components/LocationMap'), {
   ssr: false,
   loading: () => <Loader2 className="animate-spin text-primary" size={32} />,
@@ -71,8 +70,6 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((s) => s.avatar.user);
   const { id } = use(params);
-
-  // Use the hook which now handles API sync for BOTH followers and following
   const { isFollowing, toggle, loading: followLoading, followerCount, followingCount } = useFollow(id);
   
   const [farmer, setFarmer] = useState<FarmerProfile | null>(null);
@@ -87,7 +84,6 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
   const { visitedProduce, loading: visitedLoading, clearHistory, visitedCount } = useVisitedProduce();
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Load Farmer Profile
   useEffect(() => {
     const loadFarmer = async () => {
       try {
@@ -98,8 +94,7 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
         if (!data.success) { setFarmer(null); return; }
         
         setFarmer(data.farmer);
-        // Initial seed for follower count (hook will sync with DB eventually)
-        dispatch(setFollowerCount(data.farmer?.followers?.length ?? 0));
+          dispatch(setFollowerCount(data.farmer?.followers?.length ?? 0));
       } catch (err) {
         console.error(err);
         setFarmer(null);
@@ -110,7 +105,6 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
     loadFarmer();
   }, [id, router]);
 
-  // Load Produce List
   useEffect(() => {
     if (!farmer?.produce?.length) { setProduceList([]); return; }
     const loadProduce = async () => {
@@ -150,29 +144,30 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
     const formData = new FormData();
     const inputs = formRef.current.querySelectorAll('input, select, textarea');
     
-    // Type-safe iteration
-    inputs.forEach((el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) => {
-      if (!el.name) return;
-      if (el.type === 'file') {
-        if (el.files?.[0]) formData.append('image', el.files[0]);
-      } else if (el.type === 'checkbox') {
-        formData.append(el.name, (el as HTMLInputElement).checked ? 'true' : 'false');
-      } else if (el.value !== '') {
-        formData.append(el.name, el.value);
-      }
-    });
+    inputs.forEach((el: Element) => {
+  const input = el as HTMLInputElement;
+  
+  if (!input.name) return;
+  if (input.type === 'file') {
+    if (input.files?.[0]) formData.append('image', input.files[0]);
+  } else if (input.type === 'checkbox') {
+    formData.append(input.name, (input as HTMLInputElement).checked ? 'true' : 'false');
+  } else if (input.value !== '') {
+    formData.append(input.name, input.value);
+  }
+});
 
     try {
       const res = await fetch('/api/produce/details/', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.success) {
         setShowCreateModal(false);
-        // Refresh farmer data to update produce list references
+      
         const farmerRes = await fetch(`/api/farmer/profile/${id}`);
         const farmerData = await farmerRes.json();
         if (farmerData.success) setFarmer(farmerData.farmer);
         
-        // Refresh produce list
+       
         const listRes = await fetch('/api/produce/details/');
         const listData = await listRes.json();
         if (listData.success) {
@@ -276,8 +271,7 @@ export default function FarmerProfilePage({ params }: { params: Promise<{ id: st
           )}
         </div>
 
-        {/* Stats Section: Uses API-driven counts from useFollow hook */}
-        <div className="grid grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-3 gap-4 mb-10">
           <div className="bg-white border border-[#d4c9b0] rounded-2xl px-6 py-5 text-center">
             <p className="text-3xl font-black text-[#1a3d2b]">{followerCount}</p>
             <p className="text-[9px] font-black uppercase tracking-[0.4em] text-[#8a9a8e] mt-1">FOLLOWERS</p>
