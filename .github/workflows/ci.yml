@@ -65,7 +65,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: nerthus-app:ci
+          tags: honji-app:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -73,14 +73,13 @@ jobs:
 
       - name: Smoke test Docker container
         run: |
-          docker run --rm -d -p 3000:3000 --name test-app nerthus-app:ci
+          docker run --rm -d -p 3000:3000 --name test-app honji-app:ci
           sleep 10
           curl -f http://localhost:3000/api/health || exit 1
-          docker stop test-app
+          docker stop test-app\
 
-      # Docker Scout Vulnerability Scan
       - name: Docker Scout Scan
         uses: docker/scout-action@v1
         with:
           command: quickview
-          image: nerthus-app:ci
+          image: honji-app:ci
